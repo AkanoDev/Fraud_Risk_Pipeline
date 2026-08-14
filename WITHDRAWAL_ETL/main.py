@@ -3,6 +3,7 @@ from extract import extract_folder, extract_single_file
 from transform import transform
 from load import load
 from config import SOURCE_FOLDER
+from validation import validate_columns, EXPECTED_COLUMNS
 
 def run_pipeline(single_file: str = None):
 
@@ -13,6 +14,11 @@ def run_pipeline(single_file: str = None):
         raw_df = extract_single_file(single_file)
     else:
         raw_df = extract_folder(SOURCE_FOLDER)
+
+    # -------------------------
+    # VALIDATE COLUMN HEADERS
+    # -------------------------
+    validate_columns(raw_df, EXPECTED_COLUMNS)
 
     # -------------------------
     # TRANSFORM

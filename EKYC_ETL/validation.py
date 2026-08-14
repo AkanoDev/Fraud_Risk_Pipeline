@@ -48,16 +48,16 @@ def validate_columns(df, expected_columns):
     # Columns existing in source but not needed by ETL
     unused_columns = actual_set - expected_set
 
-    print("\n" + "=" * 40)
+    print("\n" + "=" * 30)
     print("COLUMN VALIDATION")
-    print("=" * 40)
+    print("=" * 30)
 
     # -----------------------------
     # TARGETED COLUMNS
     # -----------------------------
 
     print("\nTARGETED COLUMNS")
-    print("-" * 40)
+    print("-" * 30)
 
     for column in expected_columns:
 
@@ -71,7 +71,7 @@ def validate_columns(df, expected_columns):
     # -----------------------------
 
     print("\nUNUSED SOURCE COLUMNS")
-    print("-" * 40)
+    print("-" * 30)
 
     if unused_columns:
         for column in actual_columns:
@@ -84,11 +84,11 @@ def validate_columns(df, expected_columns):
     # RESULT
     # -----------------------------
 
-    print("\n" + "=" * 40)
+    print("\n" + "=" * 30)
 
     if missing_columns:
         print("STATUS: FAILED")
-        print("=" * 40)
+        print("=" * 30)
 
         raise ValueError(
             "Source file is missing one or more required columns."
@@ -99,6 +99,6 @@ def validate_columns(df, expected_columns):
     else:
         print("STATUS: PASSED")
 
-    print("=" * 40)
+    print("=" * 30)
 
     return True

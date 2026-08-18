@@ -2,6 +2,9 @@ TRUNCATE TABLE ekyc_calculated;
 
 INSERT INTO ekyc_calculated (
     exported_date,
+	bill_no,
+	account,
+	account_id,
     status,
     rejection_reason,
     manual_reason,
@@ -65,6 +68,9 @@ seconds_calc AS (
 
 SELECT
     exported_date,
+	bill_no,
+	account,
+	account_id,
     status,
 	rejection_reason,
 	manual_reason,

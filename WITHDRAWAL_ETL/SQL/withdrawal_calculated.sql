@@ -1,4 +1,9 @@
-TRUNCATE TABLE withdrawal_calculated;
+DELETE FROM withdrawal_calculated
+    WHERE serial_number IN (
+        SELECT DISTINCT serial_number
+        FROM staging_withdrawal
+    WHERE serial_number IS NOT NULL
+);
 
 INSERT INTO withdrawal_calculated(
    exported_date,
@@ -70,7 +75,13 @@ SELECT
         ELSE NULL
     END AS duration
 
-FROM withdrawal_clean
+ FROM withdrawal_clean
+
+    WHERE serial_number IN (
+        SELECT DISTINCT serial_number
+        FROM staging_withdrawal
+        WHERE serial_number IS NOT NULL
+    )
 
 ),
 

@@ -1,4 +1,9 @@
-TRUNCATE TABLE wd_hourly_order;
+DELETE FROM wd_hourly_order
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+);
 
 INSERT INTO wd_hourly_order (
     exported_date,
@@ -16,6 +21,12 @@ SELECT
     COUNT(*) AS total_orders
 
 FROM withdrawal_clean
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+)
 
 GROUP BY
     exported_date,

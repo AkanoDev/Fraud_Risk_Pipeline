@@ -1,4 +1,9 @@
-TRUNCATE TABLE wd_status_daily;
+DELETE FROM wd_status_daily
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+);
 
 INSERT INTO wd_status_daily(
     exported_date,
@@ -65,5 +70,11 @@ SELECT
 	
 FROM withdrawal_calculated
 
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+)
+
 GROUP BY exported_date
-ORDER BY exported_date;
+ORDER BY exported_date; 

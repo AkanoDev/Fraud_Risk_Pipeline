@@ -1,4 +1,9 @@
-TRUNCATE TABLE wd_duration_daily;
+DELETE FROM wd_duration_daily
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+);
 
 INSERT INTO wd_duration_daily (
     exported_date,
@@ -145,5 +150,12 @@ SELECT
     ) AS avg_branch_seconds
 
 FROM withdrawal_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+)
+
 GROUP BY exported_date
 ORDER BY exported_date;

@@ -1,4 +1,9 @@
-TRUNCATE TABLE ekyc_status_daily;
+DELETE FROM ekyc_status_daily
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+);
 
 INSERT INTO ekyc_status_daily (
     exported_date,
@@ -66,6 +71,12 @@ SELECT
 
 
 FROM ekyc_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+)
 
 GROUP BY exported_date
 

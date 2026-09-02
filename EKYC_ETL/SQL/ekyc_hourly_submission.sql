@@ -1,4 +1,9 @@
-TRUNCATE TABLE ekyc_hourly_submission;
+DELETE FROM ekyc_hourly_submission
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+);
 
 INSERT INTO ekyc_hourly_submission (
     exported_date,
@@ -17,7 +22,13 @@ SELECT
 
 FROM ekyc_clean
 
-WHERE status NOT IN ('Invalid', 'Improve Information')
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+)
+
+AND status NOT IN ('Invalid', 'Improve Information')
 
 GROUP BY
     exported_date,

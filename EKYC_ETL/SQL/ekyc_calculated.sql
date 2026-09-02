@@ -1,4 +1,9 @@
-TRUNCATE TABLE ekyc_calculated;
+DELETE FROM ekyc_calculated
+    WHERE bill_no IN (
+        SELECT DISTINCT bill_no
+        FROM staging_ekyc
+    WHERE bill_no IS NOT NULL
+);
 
 INSERT INTO ekyc_calculated (
     exported_date,
@@ -29,34 +34,47 @@ WITH duration_calc AS (
     SELECT
         *,
         CASE
-            -- MAYA transactions
-            WHEN channel = 'MAYA' THEN
+
+            -- No Info Time and status is not Invalid / Improve Information
+            WHEN info_time IS NULL
+                 AND status NOT IN ('Invalid', 'Improve Information')
+            THEN
                 risk_completion_time - created_date
 
-			-- System process
-			WHEN processed_by = 'system' THEN
-				risk_completion_time - info_time
+            -- System process
+            WHEN processed_by = 'system' THEN
+                risk_completion_time - info_time
 
             -- Waiting for processor
             WHEN processed_by IS NULL
-                 OR processed_by IN ('None', 'nan', '') THEN
+                 OR processed_by IN ('None', 'nan', '')
+            THEN
                 cs_pre_review_time - info_time
 
             -- Risk completed → waiting for CS completion
             WHEN cs_pre_review_time IS NOT NULL
-                 AND cs_completion_time IS NULL THEN
+                 AND cs_completion_time IS NULL
+            THEN
                 risk_completion_time - cs_pre_review_time
 
             -- CS completed
-            WHEN cs_completion_time IS NOT NULL THEN
+            WHEN cs_completion_time IS NOT NULL
+            THEN
                 risk_completion_time - cs_completion_time
 
-            -- default
+            -- Default
             ELSE
                 risk_completion_time - info_time
+
         END AS duration
 
     FROM ekyc_clean
+    
+    WHERE bill_no IN (
+        SELECT DISTINCT bill_no
+        FROM staging_ekyc
+        WHERE bill_no IS NOT NULL
+    )
 ),
 
 seconds_calc AS (

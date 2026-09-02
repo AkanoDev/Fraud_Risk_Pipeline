@@ -1,4 +1,14 @@
-TRUNCATE TABLE ekyc_breakdown_daily;
+DELETE FROM ekyc_breakdown_daily
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+);
+
+
+/* =========================================================
+   REBUILD ONLY AFFECTED DATES
+========================================================= */
 
 INSERT INTO ekyc_breakdown_daily (
     exported_date,
@@ -12,6 +22,7 @@ INSERT INTO ekyc_breakdown_daily (
 /* ==========================================
    VIP LEVEL
 ========================================== */
+
 SELECT
     exported_date,
     'VIP' AS breakdown_type,
@@ -37,6 +48,12 @@ SELECT
 
 FROM ekyc_calculated
 
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+)
+
 GROUP BY
     exported_date,
     status,
@@ -44,6 +61,7 @@ GROUP BY
 
 
 UNION ALL
+
 
 /* ==========================================
    PROCESSING DURATION
@@ -70,6 +88,12 @@ FROM ekyc_calculated
 
 WHERE duration_bracket IS NOT NULL
 
+  AND exported_date IN (
+      SELECT DISTINCT exported_date
+      FROM staging_ekyc
+      WHERE exported_date IS NOT NULL
+  )
+
 GROUP BY
     exported_date,
     processing_type,
@@ -78,15 +102,19 @@ GROUP BY
 
 UNION ALL
 
+
 /* ==========================================
    REJECTION REASON
 ========================================== */
+
 SELECT
     exported_date,
     'Reject Reason' AS breakdown_type,
     processing_type AS category,
     rejection_reason AS breakdown_value,
-	0 AS breakdown_order,
+
+    0 AS breakdown_order,
+
     COUNT(*) AS total
 
 FROM ekyc_calculated
@@ -95,12 +123,20 @@ WHERE
     status IN ('Auto Reject', 'Manual Reject')
     AND rejection_reason IS NOT NULL
 
+    AND exported_date IN (
+        SELECT DISTINCT exported_date
+        FROM staging_ekyc
+        WHERE exported_date IS NOT NULL
+    )
+
 GROUP BY
     exported_date,
     processing_type,
     rejection_reason
 
+
 UNION ALL
+
 
 /* ==========================================
    ID TYPE
@@ -111,17 +147,27 @@ SELECT
     'ID Type' AS breakdown_type,
     status AS category,
     COALESCE(id_type, 'Unknown') AS breakdown_value,
+
     0 AS breakdown_order,
+
     COUNT(*) AS total
 
 FROM ekyc_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+)
 
 GROUP BY
     exported_date,
     status,
     id_type
 
+
 UNION ALL
+
 
 /* ==========================================
    AGENT PERFORMANCE
@@ -132,7 +178,9 @@ SELECT
     'Agent' AS breakdown_type,
     status AS category,
     processed_by AS breakdown_value,
+
     NULL AS breakdown_order,
+
     COUNT(*) AS total
 
 FROM ekyc_calculated
@@ -140,14 +188,22 @@ FROM ekyc_calculated
 WHERE
     processed_by IS NOT NULL
     AND processed_by <> 'system'
-    AND status IN ('Approval','Manual Reject')
+    AND status IN ('Approval', 'Manual Reject')
+
+    AND exported_date IN (
+        SELECT DISTINCT exported_date
+        FROM staging_ekyc
+        WHERE exported_date IS NOT NULL
+    )
 
 GROUP BY
     exported_date,
     status,
     processed_by
 
+
 UNION ALL
+
 
 /* ==========================================
    AGENT PROCESSING TIME
@@ -159,7 +215,7 @@ SELECT
     processed_by AS category,
     duration_bracket AS breakdown_value,
 
- 	CASE duration_bracket
+    CASE duration_bracket
         WHEN '< 3 min' THEN 1
         WHEN '3-7 min' THEN 2
         WHEN '7-10 min' THEN 3
@@ -168,19 +224,57 @@ SELECT
         ELSE 999
     END AS breakdown_order,
 
-	
     COUNT(*) AS total
 
 FROM ekyc_calculated
 
-WHERE processing_type = 'Manual'
-  AND processed_by IS NOT NULL
-  AND duration_bracket IS NOT NULL
+WHERE
+    processing_type = 'Manual'
+    AND processed_by IS NOT NULL
+    AND duration_bracket IS NOT NULL
+
+    AND exported_date IN (
+        SELECT DISTINCT exported_date
+        FROM staging_ekyc
+        WHERE exported_date IS NOT NULL
+    )
 
 GROUP BY
     exported_date,
     processed_by,
     duration_bracket
+
+
+UNION ALL
+
+
+/* ==========================================
+   STATUS BY PROCESSING TYPE
+========================================== */
+
+SELECT
+    exported_date,
+    'Status' AS breakdown_type,
+    processing_type AS category,
+    status AS breakdown_value,
+
+    0 AS breakdown_order,
+
+    COUNT(*) AS total
+
+FROM ekyc_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+)
+
+GROUP BY
+    exported_date,
+    processing_type,
+    status
+
 
 ORDER BY
     exported_date,

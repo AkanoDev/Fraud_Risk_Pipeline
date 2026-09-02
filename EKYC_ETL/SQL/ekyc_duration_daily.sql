@@ -1,4 +1,9 @@
-TRUNCATE TABLE ekyc_duration_daily;
+DELETE FROM ekyc_duration_daily
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+);
 
 INSERT INTO ekyc_duration_daily (
     exported_date,
@@ -16,8 +21,8 @@ INSERT INTO ekyc_duration_daily (
     total_pass_manual,
     total_pass_system,
     total_fail,
-    total_fail_manual
-    ,total_fail_system,
+    total_fail_manual,
+    total_fail_system,
 
 -- pass
     system_approval_pass,
@@ -33,7 +38,8 @@ INSERT INTO ekyc_duration_daily (
     avg_duration_seconds,
     avg_manual_seconds,
     avg_system_seconds,
-    avg_cs_correction_seconds
+    avg_cs_correction_seconds,
+    avg_not_cs_correction_seconds
 )
 
 SELECT
@@ -181,15 +187,31 @@ SELECT
         2
     ) AS avg_system_seconds,
 
-    ROUND(
+	ROUND(
 	    AVG(duration_seconds) FILTER (
 	        WHERE cs_start_time IS NOT NULL
 	          AND cs_completion_time IS NOT NULL
+			  AND processing_type = 'Manual'
 	    ),
 	    2
-	) AS avg_cs_correction_seconds
+	) AS avg_cs_correction_seconds,
+
+	ROUND(
+	    AVG(duration_seconds) FILTER (
+	        WHERE cs_start_time IS NULL
+	          AND cs_completion_time IS NULL
+			  AND processing_type = 'Manual'
+	    ),
+	    2
+	) AS avg_not_cs_correction_seconds	
 
 FROM ekyc_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_ekyc
+    WHERE exported_date IS NOT NULL
+)
 
 GROUP BY exported_date
 

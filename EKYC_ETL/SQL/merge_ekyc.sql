@@ -5,7 +5,6 @@ FROM staging_ekyc
 ON CONFLICT (bill_no, exported_date)
 
 DO UPDATE SET
-    bill_no = EXCLUDED.bill_no,
     account = EXCLUDED.account,
     account_id = EXCLUDED.account_id,
     vip_level = EXCLUDED.vip_level,

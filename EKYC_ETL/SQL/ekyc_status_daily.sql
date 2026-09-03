@@ -26,11 +26,11 @@ SELECT
     COUNT(*) AS total_ekyc,
 
     COUNT(*) FILTER (
-        WHERE processed_by = 'system'
+        WHERE LOWER(processed_by) = 'system'
     ) AS system_reviewed,
 
 	COUNT(*) FILTER (
-	    WHERE processed_by <> 'system'
+	    WHERE LOWER(processed_by) <> 'system'
 	      AND (
 	          status = 'Approval'
 	          OR status = 'Manual Reject'

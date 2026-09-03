@@ -95,12 +95,12 @@ SELECT
 
     COUNT(*) FILTER (
         WHERE duration_seconds < 180
-          AND processed_by <> 'system'
+          AND LOWER(processed_by) <> 'system'
     ) AS total_pass_manual,
 
     COUNT(*) FILTER (
         WHERE duration_seconds < 180
-          AND processed_by = 'system'
+          AND LOWER(processed_by) = 'system'
     ) AS total_pass_system,
 
     -- SLA Fail
@@ -110,25 +110,25 @@ SELECT
 
     COUNT(*) FILTER (
         WHERE duration_seconds >= 180
-          AND processed_by <> 'system'
+          AND LOWER(processed_by) <> 'system'
     ) AS total_fail_manual,
 
 	COUNT(*) FILTER (
         WHERE duration_seconds >= 180
-          AND processed_by = 'system'
+          AND LOWER(processed_by) = 'system'
     ) AS total_fail_system,
 
     -- PASS
 	
 	COUNT(*) FILTER (
 	    WHERE duration_seconds < 180
-	      AND processed_by = 'system'
+	      AND LOWER(processed_by) = 'system'
 	      AND status = 'Approval'
 	) AS system_approval_pass,
 	
 	COUNT(*) FILTER (
 	    WHERE duration_seconds < 180
-	      AND processed_by <> 'system'
+	      AND LOWER(processed_by) <> 'system'
 	      AND status = 'Approval'
 	) AS manual_approval_pass,
 	
@@ -147,13 +147,13 @@ SELECT
 	
 	COUNT(*) FILTER (
 	    WHERE duration_seconds >= 180
-	      AND processed_by = 'system'
+	      AND LOWER(processed_by) = 'system'
 	      AND status = 'Approval'
 	) AS system_approval_fail,
 	
 	COUNT(*) FILTER (
 	    WHERE duration_seconds >= 180
-	      AND processed_by <> 'system'
+	      AND LOWER(processed_by) <> 'system'
 	      AND status = 'Approval'
 	) AS manual_approval_fail,
 	

@@ -18,7 +18,6 @@ DO UPDATE SET
     exception_prompt = EXCLUDED.exception_prompt,
     type = EXCLUDED.type,
     first_withdrawal = EXCLUDED.first_withdrawal,
-    serial_number = EXCLUDED.serial_number,
     label = EXCLUDED.label,
     account = EXCLUDED.account,
     account_id = EXCLUDED.account_id,

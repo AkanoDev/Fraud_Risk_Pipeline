@@ -42,7 +42,7 @@ WITH duration_calc AS (
                 risk_completion_time - created_date
 
             -- System process
-            WHEN processed_by = 'system' THEN
+            WHEN LOWER(processed_by) = 'system' THEN
                 risk_completion_time - info_time
 
             -- Waiting for processor

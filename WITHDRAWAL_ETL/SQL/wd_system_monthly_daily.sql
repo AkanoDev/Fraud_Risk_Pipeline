@@ -1,4 +1,13 @@
-TRUNCATE TABLE wd_system_monthly_daily;
+DELETE FROM wd_system_monthly_daily
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+);
+
+/* =========================================================
+   REBUILD ONLY AFFECTED DATES
+========================================================= */
 
 INSERT INTO wd_system_monthly_daily (
     exported_date,
@@ -14,7 +23,10 @@ INSERT INTO wd_system_monthly_daily (
 SELECT
     exported_date,
 
-    -- System processing duration
+    /* ==========================================
+       SYSTEM PROCESSING DURATION
+    ========================================== */
+
     COUNT(*) FILTER (
         WHERE processing_type = 'System'
           AND duration_seconds < 60
@@ -37,20 +49,29 @@ SELECT
           AND duration_seconds >= 600
     ) AS system_greater_10min,
 
-    -- Total system reviewed
+    /* ==========================================
+       TOTAL SYSTEM REVIEWED
+    ========================================== */
+
     COUNT(*) FILTER (
         WHERE processing_type = 'System'
           AND status NOT IN ('Pending', 'Pending2')
           AND duration_seconds IS NOT NULL
     ) AS total_system_review,
 
-    -- Total reviewed
+    /* ==========================================
+       TOTAL REVIEWED
+    ========================================== */
+
     COUNT(*) FILTER (
         WHERE status NOT IN ('Pending', 'Pending2')
           AND duration_seconds IS NOT NULL
     ) AS total_review,
 
-    -- Pass rate
+    /* ==========================================
+       SYSTEM RATIO
+    ========================================== */
+
     COALESCE(
         COUNT(*) FILTER (
             WHERE processing_type = 'System'
@@ -69,6 +90,12 @@ SELECT
     ) AS system_ratio
 
 FROM withdrawal_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_withdrawal
+    WHERE exported_date IS NOT NULL
+)
 
 GROUP BY
     exported_date

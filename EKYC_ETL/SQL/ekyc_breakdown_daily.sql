@@ -187,7 +187,7 @@ FROM ekyc_calculated
 
 WHERE
     processed_by IS NOT NULL
-    AND processed_by <> 'system'
+    AND LOWER(processed_by) <> 'system'
     AND status IN ('Approval', 'Manual Reject')
 
     AND exported_date IN (

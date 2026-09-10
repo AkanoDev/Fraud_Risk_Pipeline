@@ -59,10 +59,25 @@ def run_pipeline(single_file: str = None):
     # -------------------------
     # CREATE BUSINESS TABLE
     # -------------------------
-   
+    start = time.perf_counter()
+
+    run_sql_file("sql/pending_calculated.sql")
+
+    print(f"CALCULATED: {time.perf_counter() - start:.2f} seconds")
     # -------------------------
     # CREATE SUMMARY TABLES
     # -------------------------
+    start = time.perf_counter()
+
+    run_sql_file("sql/pdt_rule_daily.sql")
+
+    print(f"CALCULATED: {time.perf_counter() - start:.2f} seconds")
+
+    start = time.perf_counter()
+
+    run_sql_file("sql/pdt_duration_daily.sql")
+
+    print(f"CALCULATED: {time.perf_counter() - start:.2f} seconds")
 
     print("ETL pipeline completed successfully.")
 

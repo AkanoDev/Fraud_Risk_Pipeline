@@ -6,7 +6,7 @@ from sqlalchemy.types import Numeric, Text, Date, DateTime, Integer
 from config import DB_CONFIG
 
 DTYPE_MAP = {
-        "serial_number": Text(),
+    "serial_number": Text(),
     "account": Text(),
     "account_id": Text(),
     "user_level": Text(),

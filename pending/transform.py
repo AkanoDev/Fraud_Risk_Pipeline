@@ -55,7 +55,8 @@ def clean_and_cast(df: pd.DataFrame) -> pd.DataFrame:
     df["account"] = df["account"].astype(str)
     df["account_id"] = df["account_id"].astype(str)
     df["user_level"] = df["user_level"].astype(str)
-    df["amount"] = df["amount"].str.replace(",", "", regex=False).astype(float)
+    df["amount"] = pd.to_numeric(
+    df["amount"].astype(str).str.replace(",", "", regex=False),errors="coerce")
     df["first_withdrawal"] = df["first_withdrawal"].astype(str)
     df["old_label"] = df["old_label"].astype(str)
     df["label"] = df["label"].astype(str)

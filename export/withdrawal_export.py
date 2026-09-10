@@ -1,7 +1,14 @@
+import sys
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine
-from config import DB_CONFIG   
+
+# Add project root (00_FraudAndRisk_DB) to path so `withdrawal` package is importable
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+from withdrawal.config import DB_CONFIG
+
 
 def get_connection():
     connection_string = (
@@ -10,7 +17,13 @@ def get_connection():
     )
     return create_engine(connection_string)
 
-def export_query(query, filename="output.xlsx"):
+
+def load_query(name: str) -> str:
+    """Load a .sql file's contents from the query/ folder (sibling of export/)."""
+    return (PROJECT_ROOT / "query" / name).read_text(encoding="utf-8")
+
+
+def export_query(query: str, filename: str = "output.xlsx") -> pd.DataFrame:
     connection = get_connection()
     data = pd.read_sql(sql=query, con=connection)
 
@@ -20,14 +33,11 @@ def export_query(query, filename="output.xlsx"):
     print(f"Exported {len(data)} rows to {download_path}")
     return data
 
+
 def main():
-    query = """
-        SELECT *
-        FROM withdrawal_calculated
-        WHERE duration_seconds >= 180
-        AND exported_date BETWEEN '2026-09-01' AND '2026-09-07';
-    """
+    query = load_query("wd-more-than-equal-3mins.sql")
     export_query(query, filename="exception_report.xlsx")
+
 
 if __name__ == "__main__":
     main()

@@ -18,6 +18,7 @@ INSERT INTO withdrawal_calculated(
     processing_by,
     processed_by,
     locked_by,
+    locked_remark,
     unlocked_by,
     locked_state,
     
@@ -42,56 +43,67 @@ INSERT INTO withdrawal_calculated(
     -- calc
     duration,
     duration_seconds,
+    total_duration,
+    total_duration_seconds,
+
     processing_type,
     duration_bracket,
+    all_duration_bracket,
     last_label
 )
 
 WITH duration_calc AS (
 
-SELECT
-    *,
+    SELECT
+        *,
 
-    CASE
-        WHEN status = 'Cancel in background'
-             AND process_time IS NOT NULL THEN
+        /* Existing duration */
+        CASE
+            WHEN status = 'Cancel in background'
+                 AND process_time IS NOT NULL THEN
 
-            CASE
-                WHEN locked_state = 'Unlocked'
-                     AND unlocked_date IS NOT NULL
-                THEN process_time - unlocked_date
-                ELSE process_time - created_time
-            END
+                CASE
+                    WHEN locked_state = 'Unlocked'
+                         AND unlocked_date IS NOT NULL
+                    THEN process_time - unlocked_date
+                    ELSE process_time - created_time
+                END
 
-        WHEN processing_time IS NOT NULL THEN
+            WHEN processing_time IS NOT NULL THEN
 
-            CASE
-                WHEN locked_state = 'Unlocked'
-                     AND unlocked_date IS NOT NULL
-                THEN processing_time - unlocked_date
-                ELSE processing_time - created_time
-            END
+                CASE
+                    WHEN locked_state = 'Unlocked'
+                         AND unlocked_date IS NOT NULL
+                    THEN processing_time - unlocked_date
+                    ELSE processing_time - created_time
+                END
 
-        ELSE NULL
-    END AS duration
+            ELSE NULL
+        END AS duration,
 
- FROM withdrawal_clean
+        /* New total duration */
+        CASE
+            WHEN status = 'Cancel in background'
+                 AND process_time IS NOT NULL
+            THEN process_time - created_time
 
-    WHERE serial_number IN (
-        SELECT DISTINCT serial_number
-        FROM staging_withdrawal
-        WHERE serial_number IS NOT NULL
-    )
+            WHEN processing_time IS NOT NULL
+            THEN processing_time - created_time
+
+            ELSE NULL
+        END AS total_duration
+
+    FROM withdrawal_clean
 
 ),
 
 seconds_calc AS (
 
-SELECT
-    *,
-    EXTRACT(EPOCH FROM duration)::INTEGER AS duration_seconds
-
-FROM duration_calc
+    SELECT
+        *,
+        EXTRACT(EPOCH FROM duration)::INTEGER AS duration_seconds,
+        EXTRACT(EPOCH FROM total_duration)::INTEGER AS total_duration_seconds
+    FROM duration_calc
 
 )
 
@@ -109,6 +121,7 @@ SELECT
 		processing_by,
 		processed_by,
 		locked_by,
+        locked_remark,
 		unlocked_by,
 		locked_state,
 		
@@ -133,6 +146,8 @@ SELECT
 		-- Calculated
 		duration,
 		duration_seconds,
+        total_duration,
+        total_duration_seconds,
 
     /* Processing Type */
     CASE
@@ -153,6 +168,19 @@ SELECT
         WHEN duration_seconds < 1200 THEN '10-20 min'
         ELSE '20 min+'
     END AS duration_bracket,
+
+    /* All Duration Bracket */
+    CASE
+        WHEN total_duration_seconds IS NULL THEN NULL
+        WHEN total_duration_seconds < 60 THEN '< 1 min'
+        WHEN total_duration_seconds < 120 THEN '1-2 min'
+        WHEN total_duration_seconds < 180 THEN '2-3 min'
+        WHEN total_duration_seconds < 300 THEN '3-5 min'
+        WHEN total_duration_seconds < 420 THEN '5-7 min'
+        WHEN total_duration_seconds < 600 THEN '7-10 min'
+        WHEN total_duration_seconds < 1200 THEN '10-20 min'
+        ELSE '20 min+'
+    END AS all_duration_bracket,
 
 	TRIM(
     split_part(

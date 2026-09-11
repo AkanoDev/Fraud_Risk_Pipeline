@@ -35,8 +35,13 @@ def export_query(query: str, filename: str = "output.xlsx") -> pd.DataFrame:
 
 
 def main():
-    query = load_query("wd-more-than-equal-3mins.sql")
-    export_query(query, filename="exception_report.xlsx")
+    queries = [
+        ("withdrawal_delay_summary.sql", "20260910_withdrawal_delay_summary.xlsx"),
+    ]
+
+    for sql_file, output_file in queries:
+        query = load_query(sql_file)
+        export_query(query, filename=output_file)
 
 
 if __name__ == "__main__":

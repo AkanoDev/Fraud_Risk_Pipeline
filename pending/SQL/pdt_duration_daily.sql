@@ -16,9 +16,11 @@ INSERT INTO pdt_duration_daily (
     min_10_to_20,
     greater_than_20,
     total_reviewed,
+    total_adjusted,
     total_pass,
     total_fail,
-    avg_duration_seconds
+    avg_duration_seconds,
+    avg_adjusted_seconds
 )
 
 SELECT 
@@ -61,6 +63,10 @@ SELECT
         WHERE LOWER(processing_status) = 'processed'
     ) AS total_reviewed,
 
+    COUNT(*) FILTER (
+        WHERE is_adjusted = 1
+    ) AS total_adjusted,
+
 	  -- SLA Pass
     COUNT(*) FILTER (
         WHERE duration_seconds < 300
@@ -75,8 +81,22 @@ SELECT
     ROUND(
         AVG(duration_seconds),
         2
-    ) AS avg_duration_seconds
+    ) AS avg_duration_seconds,
+
+	ROUND(
+	AVG(duration_seconds) FILTER (
+		WHERE is_adjusted = 1
+		),
+		2
+	) AS avg_adjusted_seconds
 
 FROM pending_calculated
+
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_pending
+    WHERE exported_date IS NOT NULL
+)
+
 GROUP BY exported_date
 ORDER BY exported_date;

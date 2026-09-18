@@ -43,7 +43,7 @@ SELECT
     *,
     processing_time - created_date AS duration
 
- FROM pending_clean
+FROM pending_clean
 
     WHERE serial_number IN (
         SELECT DISTINCT serial_number

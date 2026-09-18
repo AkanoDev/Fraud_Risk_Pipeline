@@ -27,8 +27,13 @@ FROM pending_calculated
 CROSS JOIN LATERAL
     regexp_split_to_table(rule_no, '\s*,\s*') AS rule
 
-WHERE rule_no IS NOT NULL
-  AND TRIM(rule) <> ''
+WHERE exported_date IN (
+    SELECT DISTINCT exported_date
+    FROM staging_pending
+    WHERE exported_date IS NOT NULL
+)
+AND rule_no IS NOT NULL
+AND TRIM(rule) <> ''
 
 GROUP BY
     exported_date,
